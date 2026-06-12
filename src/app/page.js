@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CATEGORIES, MENU, formatPrice } from "@/lib/menu";
 import { cartCount, cartTotal, useStore } from "@/components/store-context";
 import QtyStepper from "@/components/qty-stepper";
+import axios from "axios";
 
 // Gradiente do "prato" de cada categoria, para dar variedade visual aos cards.
 const TILE_GRADIENTS = {
@@ -20,6 +21,19 @@ export default function MenuPage() {
   const { cart, hydrated, dispatch } = useStore();
   const [category, setCategory] = useState("todos");
   const [search, setSearch] = useState("");
+
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    async function getOrders() {
+      const pedidos = await axios.get("http://localhost:9000/pedidos");
+      setOrders(pedidos.data);
+
+      console.log(pedidos)
+    }
+
+    getOrders()
+  }, []);
 
   const items = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -38,25 +52,39 @@ export default function MenuPage() {
   return (
     <div className="space-y-8">
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-zinc-950 via-zinc-900 to-orange-950 p-8 text-white shadow-xl sm:p-10">
-        <span aria-hidden className="absolute -right-6 -top-8 text-[9rem] opacity-15 select-none">
+        <span
+          aria-hidden
+          className="absolute -right-6 -top-8 text-[9rem] opacity-15 select-none"
+        >
           🍔
         </span>
-        <span aria-hidden className="absolute -bottom-10 right-28 text-[7rem] opacity-10 select-none">
+        <span
+          aria-hidden
+          className="absolute -bottom-10 right-28 text-[7rem] opacity-10 select-none"
+        >
           🍕
         </span>
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-400">
           Aberto agora · 18h às 23h
         </p>
         <h1 className="mt-2 max-w-md text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">
-          Bateu a fome? <span className="text-amber-400">A brasa já tá acesa.</span>
+          Bateu a fome?{" "}
+          <span className="text-amber-400">A brasa já tá acesa.</span>
         </h1>
         <p className="mt-3 max-w-md text-zinc-300">
-          Hambúrguer artesanal, pizza no forno a lenha e açaí cremoso, direto pra sua casa.
+          Hambúrguer artesanal, pizza no forno a lenha e açaí cremoso, direto
+          pra sua casa.
         </p>
         <div className="mt-5 flex flex-wrap gap-2 text-sm font-medium">
-          <span className="rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/15">⭐ 4,9 (2,3 mil)</span>
-          <span className="rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/15">🛵 30–40 min</span>
-          <span className="rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/15">🔥 Forno a lenha</span>
+          <span className="rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/15">
+            ⭐ 4,9 (2,3 mil)
+          </span>
+          <span className="rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/15">
+            🛵 30–40 min
+          </span>
+          <span className="rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/15">
+            🔥 Forno a lenha
+          </span>
         </div>
       </section>
 
@@ -75,7 +103,10 @@ export default function MenuPage() {
         </div>
 
         <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
-          <CategoryButton active={category === "todos"} onClick={() => setCategory("todos")}>
+          <CategoryButton
+            active={category === "todos"}
+            onClick={() => setCategory("todos")}
+          >
             ✨ Todos
           </CategoryButton>
           {CATEGORIES.map((cat) => (
@@ -94,11 +125,13 @@ export default function MenuPage() {
         <div className="rounded-3xl border border-dashed border-zinc-300 bg-white/60 py-16 text-center">
           <p className="text-4xl">🤔</p>
           <p className="mt-2 font-semibold text-zinc-700">Nada por aqui…</p>
-          <p className="text-sm text-zinc-500">Tente buscar por outro nome ou categoria.</p>
+          <p className="text-sm text-zinc-500">
+            Tente buscar por outro nome ou categoria.
+          </p>
         </div>
       ) : (
         <ul className="grid gap-4 pb-24 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => (
+          {orders.map((item) => (
             <li
               key={item.id}
               className="group flex flex-col rounded-3xl bg-white p-5 shadow-sm ring-1 ring-zinc-900/5 transition duration-200 hover:-translate-y-1 hover:shadow-xl hover:ring-brand-500/20"
@@ -107,24 +140,25 @@ export default function MenuPage() {
                 <span
                   className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-3xl shadow-inner transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6 ${TILE_GRADIENTS[item.category]}`}
                 >
-                  {item.emoji}
                 </span>
                 <div>
                   <h2 className="font-bold tracking-tight">{item.name}</h2>
                   <p className="mt-1 text-sm leading-relaxed text-zinc-500">
-                    {item.description}
+                    {item.item}
                   </p>
                 </div>
               </div>
 
               <div className="mt-auto flex items-center justify-between pt-5">
                 <span className="text-lg font-extrabold tracking-tight text-zinc-900">
-                  {formatPrice(item.price)}
+                  {item.quantity}
                 </span>
                 {hydrated && qtyOf(item.id) > 0 ? (
                   <QtyStepper
                     qty={qtyOf(item.id)}
-                    onChange={(qty) => dispatch({ type: "setQty", id: item.id, qty })}
+                    onChange={(qty) =>
+                      dispatch({ type: "setQty", id: item.id, qty })
+                    }
                   />
                 ) : (
                   <button
