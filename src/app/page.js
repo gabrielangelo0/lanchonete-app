@@ -21,6 +21,7 @@ export default function MenuPage() {
   const { cart, hydrated, dispatch } = useStore();
   const [category, setCategory] = useState("todos");
   const [search, setSearch] = useState("");
+  const [pedidos, setPedidos] = useState([]);
 
   const items = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -40,7 +41,7 @@ export default function MenuPage() {
     try {
       const pedidos = await instance.get("/pedidos");
 
-      console.log(pedidos.data);
+      setPedidos(pedidos.data);
     } catch (error) {
       console.error("Erro ao buscar pedidos:", error);
     }
@@ -132,7 +133,7 @@ export default function MenuPage() {
         </div>
       ) : (
         <ul className="grid gap-4 pb-24 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => (
+          {pedidos.map((item) => (
             <li
               key={item.id}
               className="group flex flex-col rounded-3xl bg-white p-5 shadow-sm ring-1 ring-zinc-900/5 transition duration-200 hover:-translate-y-1 hover:shadow-xl hover:ring-brand-500/20"
