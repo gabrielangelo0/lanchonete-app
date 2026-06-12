@@ -101,7 +101,9 @@ export function StoreProvider({ children }) {
     } catch {
       // Estado corrompido — segue com o estado inicial vazio.
     }
-    setHydrated(true);
+    queueMicrotask(() => {
+      setHydrated(true);
+    });
   }, []);
 
   useEffect(() => {

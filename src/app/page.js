@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CATEGORIES, MENU, formatPrice } from "@/lib/menu";
 import { cartCount, cartTotal, useStore } from "@/components/store-context";
 import QtyStepper from "@/components/qty-stepper";
-import axios from "axios";
 
 // Gradiente do "prato" de cada categoria, para dar variedade visual aos cards.
 const TILE_GRADIENTS = {
@@ -21,19 +20,6 @@ export default function MenuPage() {
   const { cart, hydrated, dispatch } = useStore();
   const [category, setCategory] = useState("todos");
   const [search, setSearch] = useState("");
-
-  const [orders, setOrders] = useState([]);
-
-  useEffect(() => {
-    async function getOrders() {
-      const pedidos = await axios.get("http://localhost:9000/pedidos");
-      setOrders(pedidos.data);
-
-      console.log(pedidos)
-    }
-
-    getOrders()
-  }, []);
 
   const items = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -131,7 +117,7 @@ export default function MenuPage() {
         </div>
       ) : (
         <ul className="grid gap-4 pb-24 sm:grid-cols-2 lg:grid-cols-3">
-          {orders.map((item) => (
+          {items.map((item) => (
             <li
               key={item.id}
               className="group flex flex-col rounded-3xl bg-white p-5 shadow-sm ring-1 ring-zinc-900/5 transition duration-200 hover:-translate-y-1 hover:shadow-xl hover:ring-brand-500/20"
@@ -140,18 +126,19 @@ export default function MenuPage() {
                 <span
                   className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-3xl shadow-inner transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6 ${TILE_GRADIENTS[item.category]}`}
                 >
+                  {item.emoji}
                 </span>
                 <div>
                   <h2 className="font-bold tracking-tight">{item.name}</h2>
                   <p className="mt-1 text-sm leading-relaxed text-zinc-500">
-                    {item.item}
+                    {item.description}
                   </p>
                 </div>
               </div>
 
               <div className="mt-auto flex items-center justify-between pt-5">
                 <span className="text-lg font-extrabold tracking-tight text-zinc-900">
-                  {item.quantity}
+                  {formatPrice(item.price)}
                 </span>
                 {hydrated && qtyOf(item.id) > 0 ? (
                   <QtyStepper
