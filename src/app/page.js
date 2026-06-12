@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CATEGORIES, MENU, formatPrice } from "@/lib/menu";
 import { cartCount, cartTotal, useStore } from "@/components/store-context";
 import QtyStepper from "@/components/qty-stepper";
+import instance from "@/lib/api";
 
 // Gradiente do "prato" de cada categoria, para dar variedade visual aos cards.
 const TILE_GRADIENTS = {
@@ -34,6 +35,20 @@ export default function MenuPage() {
   }, [category, search]);
 
   const qtyOf = (id) => cart.find((line) => line.item.id === id)?.qty ?? 0;
+
+  async function buscarPedidos() {
+    try {
+      const pedidos = await instance.get("/pedidos");
+
+      console.log(pedidos.data);
+    } catch (error) {
+      console.error("Erro ao buscar pedidos:", error);
+    }
+  }
+
+  useEffect(() => {
+    buscarPedidos();
+  }, []);
 
   return (
     <div className="space-y-8">
