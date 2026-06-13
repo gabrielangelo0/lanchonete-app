@@ -63,6 +63,19 @@ function reducer(state, action) {
       return { cart: [], orders: [order, ...state.orders] };
     }
 
+    case "createManualOrder": {
+      const order = {
+        id: action.id,
+        number: state.orders.length + 1,
+        customer: action.customer,
+        items: action.items,
+        total: action.total,
+        status: "recebido",
+        createdAt: action.createdAt,
+      };
+      return { ...state, orders: [order, ...state.orders] };
+    }
+
     case "advanceStatus": {
       const orders = state.orders.map((order) => {
         if (order.id !== action.id) return order;

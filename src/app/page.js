@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CATEGORIES, MENU, formatPrice } from "@/lib/menu";
 import { cartCount, cartTotal, useStore } from "@/components/store-context";
@@ -37,18 +37,28 @@ export default function MenuPage() {
 
   const qtyOf = (id) => cart.find((line) => line.item.id === id)?.qty ?? 0;
 
-  async function buscarPedidos() {
-    try {
-      const pedidos = await instance.get("/pedidos");
-
-      setPedidos(pedidos.data);
-    } catch (error) {
-      console.error("Erro ao buscar pedidos:", error);
-    }
-  }
-
   useEffect(() => {
-    buscarPedidos();
+    let cancelled = false;
+
+    async function loadPedidos() {
+      try {
+        const response = await instance.get("/pedidos");
+
+        if (!cancelled) {
+          startTransition(() => {
+            setPedidos(response.data);
+          });
+        }
+      } catch (error) {
+        console.error("Erro ao buscar pedidos:", error);
+      }
+    }
+
+    loadPedidos();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -142,7 +152,7 @@ export default function MenuPage() {
                 <span
                   className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-3xl shadow-inner transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6 ${TILE_GRADIENTS[item.category]}`}
                 >
-                  {item.emoji}
+                  <img src={item.photo} alt={item.name} className="h-full w-full object-cover" />
                 </span>
                 <div>
                   <h2 className="font-bold tracking-tight">{item.name}</h2>
